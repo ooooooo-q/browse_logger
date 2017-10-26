@@ -1,0 +1,13 @@
+{
+  "manifest_version": 2,
+
+  "name": "browse logger test",
+  "description": "extensionのライフサイクルの確認用",
+  "version": "1.0",
+  "background": {
+    "page": "background.html"
+  },
+  "permissions": [
+    "activeTab",  "tabs", "<all_urls>"
+  ]
+}
