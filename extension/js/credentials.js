@@ -31,8 +31,13 @@ function load(user){
       querySnapshot.forEach(function (doc) {
         console.log(doc.id, " => ", doc.data());
         const data = doc.data();
+        const duration = data.duration ? data.duration / 1000 : "now";
+
         const li = document.createElement('li');
-        li.innerText = data.url
+        const a = document.createElement('a');
+        a.href = data.url;
+        a.innerText = `${data.title} : ${duration}s `;
+        li.appendChild(a);
         ul.appendChild(li);
       });
   });
@@ -43,9 +48,11 @@ function initApp() {
 
   const loginButton = document.getElementById('login');
   const registerButton = document.getElementById('register');
+  const loadButton = document.getElementById('load');
 
   const email = document.querySelector('input[type="email"]');
   const password = document.querySelector('input[type="password"]');
+  const authStatus =  document.getElementById('auth_status');
 
 
   loginButton.addEventListener('click', () => {login(email.value, password.value)});
@@ -53,6 +60,10 @@ function initApp() {
 
   firebase.auth().onAuthStateChanged(function(user) {
     load(user)
+
+    loadButton.addEventListener('click', () => {load(email.value, password.value)});
+
+    authStatus.innerText = "connected!";
   });
 
 }
