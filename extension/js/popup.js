@@ -22,7 +22,7 @@ function authError(error){
 
 
 function load(user){
-  const collection = `/log/${user.uid}/raw`;
+  const collection = `/log/${user.uid}/raw_2`;
 
   const db = firebase.firestore();
   db.collection(collection).orderBy("timestamp", "desc").limit(10)
@@ -39,6 +39,13 @@ function load(user){
         a.innerText = `${data.title} : ${duration}s `;
         li.appendChild(a);
         ul.appendChild(li);
+
+        const texts = data.texts || [];
+        texts.forEach((text) => {
+          const text_li = document.createElement('li');
+          text_li.innerText = text;
+          li.appendChild(text_li);
+        })
       });
   });
 }

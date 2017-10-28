@@ -35,6 +35,26 @@ export const updateLastRecord = (values) => {
   };
 };
 
+export const updateLastRecordSelectText = (text) => {
+  const objectStore = db.transaction([tableName], "readwrite").objectStore(tableName);
+
+  // 最後のものを更新
+  objectStore.openCursor(null, "prev").onsuccess = (event) => {
+    const cursor = event.target.result;
+
+    if (cursor){
+      const texts = cursor.value.texts || [];
+      texts.push(text);
+      const updateData = Object.assign(cursor.value, {texts});
+
+      const request = cursor.update(updateData);
+      request.onsuccess = () => {
+        console.log("updated");
+      };
+    }
+  };
+};
+
 export const pluckAll = (pushPromise) => {
   const objectStore = db.transaction([tableName], "readwrite").objectStore(tableName);
 

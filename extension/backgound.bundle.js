@@ -14,10 +14,18 @@ const getLastTab = (cb) => {
 
 
 
-const initAddListener = (movedNewPage, onRemove) => {
+const initAddListener = (movedNewPage, onRemove, onSetText) => {
   chrome.tabs.onActivated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
   chrome.tabs.onUpdated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
   chrome.tabs.onRemoved.addListener((id) => onRemove(id));
+
+  chrome.extension.onRequest.addListener((request) => {
+    switch(request.message)
+    {
+      case 'setText':
+        onSetText(request.text);
+    }
+  });
 };
 
 
@@ -87,6 +95,26 @@ const updateLastRecord = (values) => {
 
     if (cursor){
       const updateData = Object.assign(cursor.value, values);
+
+      const request = cursor.update(updateData);
+      request.onsuccess = () => {
+        console.log("updated");
+      };
+    }
+  };
+};
+
+const updateLastRecordSelectText = (text) => {
+  const objectStore = db$1.transaction([tableName], "readwrite").objectStore(tableName);
+
+  // 最後のものを更新
+  objectStore.openCursor(null, "prev").onsuccess = (event) => {
+    const cursor = event.target.result;
+
+    if (cursor){
+      const texts = cursor.value.texts || [];
+      texts.push(text);
+      const updateData = Object.assign(cursor.value, {texts});
 
       const request = cursor.update(updateData);
       request.onsuccess = () => {
@@ -189,11 +217,16 @@ const sendTest = () => {
   pluckAll((values) => put(values));
 };
 
+const onSetText = (text) => {
+  updateLastRecordSelectText(text);
+};
+
+
 
 const initApp = () => {
   initFireBaseAuth();
   initIndexedDB();
-  initAddListener(movedNewPage, onRemove);
+  initAddListener(movedNewPage, onRemove, onSetText);
 
   setInterval(sendTest, 60 * 1000);
 };

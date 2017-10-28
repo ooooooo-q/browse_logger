@@ -17,6 +17,7 @@ import {
   setData,
   initIndexedDB,
   updateLastRecord,
+  updateLastRecordSelectText,
   pluckAll
 } from "./indexeddb";
 
@@ -74,11 +75,16 @@ const sendTest = () => {
   pluckAll((values) => put(values))
 };
 
+const onSetText = (text) => {
+  updateLastRecordSelectText(text);
+};
+
+
 
 const initApp = () => {
   initFireBaseAuth();
   initIndexedDB();
-  initAddListener(movedNewPage, onRemove);
+  initAddListener(movedNewPage, onRemove, onSetText);
 
   setInterval(sendTest, 60 * 1000);
 };
