@@ -28,6 +28,22 @@ export const add = (url, title, timestamp, cb) => {
     .catch((error) => {console.log("Error adding document: ", error)})
 };
 
+export const put = (values) => {
+
+  console.log("values",values)
+
+  const uid =  user.uid;
+  const collection = `/log/${uid}/raw_2`;
+  const data = Object.assign(values, {uid});
+
+  return db.collection(collection).add(data)
+    .then((docRef) => {
+      console.log("Document written with ID: ", docRef.id);
+    })
+    .catch((error) => {console.log("Error adding document: ", error)})
+};
+
+
 export const uploadScreenShotUrl = (screenShotUrl) =>  {
  const base64String = screenShotUrl.split("base64,")[1];
   const fileKey = `${Date.now()}.jpg`

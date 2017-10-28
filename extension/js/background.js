@@ -6,16 +6,23 @@ import {
 
 import {
   isLoggedIn,
-  setDuration,
-  add,
+  //setDuration,
+  //add,
+  put,
   uploadScreenShotUrl,
   initFireBaseAuth
 } from "./firebase"
 
+import {
+  setData,
+  initIndexedDB,
+  updateLastRecord,
+  pluckAll
+} from "./indexeddb";
+
 
 let lastActiveTabId = null;
 let lastActiveUrl = null;
-let lastDocRef = null;
 let lastActivatedTime = null;
 
 const movedNewPage = (tab) => {
@@ -29,52 +36,51 @@ const movedNewPage = (tab) => {
   const title = tab.title;
   const timestamp = Date.now();
 
-  //console.log(url);
+  updateLastRecord({duration: timestamp - lastActivatedTime});
 
-  if (lastDocRef) {
-    setDuration(lastDocRef, lastActivatedTime)
-  }
+  lastActivatedTime = timestamp;
 
-  add(url, title, timestamp, (_ref) => {
-    lastDocRef = _ref;
+  lastActiveTabId = tab.id;
+  lastActiveUrl = url;
 
-    lastActiveTabId = tab.id;
-    lastActiveUrl = url;
-    lastActivatedTime = timestamp;
-
-    //setTimeout(capture, 10 * 1000) ライフサイクルを考えてから
-  });
+  setData({url, title, timestamp});
 };
 
 const onRemove = (id) => {
   if (id === lastActiveTabId) {
 
-    if (lastDocRef) {
-      setDuration(lastDocRef, lastActivatedTime);
-    }
+    const timestamp = Date.now();
+
+    updateLastRecord({duration: timestamp - lastActivatedTime});
 
     lastActiveTabId = null;
     lastActiveUrl = null;
-    lastDocRef = null;
   }
 };
 
 
 const capture = () =>  {
-  if (!lastActiveUrl){return}
+  if (!lastActiveUrl){ return; }
 
   getLastTab((tab) => {
-    if (tab.url !== lastActiveUrl) { return;}
+    if (tab.url !== lastActiveUrl) { return; }
 
     getScreenShotUrl(uploadScreenShotUrl);
   });
 };
 
 
+const sendTest = () => {
+  pluckAll((values) => put(values))
+};
+
 
 const initApp = () => {
   initFireBaseAuth();
+  initIndexedDB();
   initAddListener(movedNewPage, onRemove);
+
+  setInterval(sendTest, 60 * 1000);
 };
 
 
