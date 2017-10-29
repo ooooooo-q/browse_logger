@@ -48,7 +48,7 @@ const movedNewPage = (tab) => {
   setData({url, title, timestamp});
 
   // 3分後に同じページであればキャプチャをとる
-  setTimeout(capture, 3 * 60 * 1000);
+  setTimeout(() => capture(url), 3 * 60 * 1000);
 };
 
 const onRemove = (id) => {
@@ -64,11 +64,9 @@ const onRemove = (id) => {
 };
 
 
-const capture = () =>  {
-  if (!lastActiveUrl){ return; }
-
+const capture = (url) =>  {
   getLastTab((tab) => {
-    if (tab.url !== lastActiveUrl) { return; }
+    if (tab.url !== url) { return; }
 
     getScreenShotUrl((screenShotUrl) => {
       resizeImage(screenShotUrl, (resizeUrl) => {
