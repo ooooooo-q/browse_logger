@@ -13,16 +13,20 @@ export const getLastTab = (cb) => {
 export const getScreenShotUrl = (cb) => {chrome.tabs.captureVisibleTab(cb)};
 
 
-export const initAddListener = (movedNewPage, onRemove, onSetText) => {
+export const initAddListener = (movedNewPage, onRemove, onSetText, loadForPopup) => {
   chrome.tabs.onActivated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
   chrome.tabs.onUpdated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
   chrome.tabs.onRemoved.addListener((id) => onRemove(id));
 
-  chrome.extension.onRequest.addListener((request) => {
+  chrome.extension.onRequest.addListener((request, sender, sendResponse) => {
     switch(request.message)
     {
       case 'setText':
         onSetText(request.text);
+        break;
+      case 'loadForPopup':
+        loadForPopup((data) => sendResponse(data));
+        break;
     }
   });
 };

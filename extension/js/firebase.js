@@ -5,35 +5,37 @@ import {
 let db;
 let user;
 
-const collectionKey = (uid) => `/log/${uid}/raw`;
+//const collectionKey = (uid) => `/log/${uid}/raw`;
+const collectionKey = (uid) => `/log/${uid}/raw_2`;
 
-export const setDuration = (ref, lastActivatedTime) => {
-  const timestamp = Date.now();
+//export const setDuration = (ref, lastActivatedTime) => {
+//  const timestamp = Date.now();
+//
+//  ref.update({"duration": timestamp - lastActivatedTime})
+//    .then(() => {console.log("Document update with ID: ")})
+//    .catch((error) => {console.log("Error update document: ", error)})
+//};
+//
+//
+//export const add = (url, title, timestamp, cb) => {
+//  const uid =  user.uid;
+//  const collection = collectionKey(uid);
+//
+//  db.collection(collection).add({uid, url, title, timestamp})
+//    .then((docRef) => {
+//      console.log("Document written with ID: ", docRef.id);
+//      cb(docRef);
+//    })
+//    .catch((error) => {console.log("Error adding document: ", error)})
+//};
 
-  ref.update({"duration": timestamp - lastActivatedTime})
-    .then(() => {console.log("Document update with ID: ")})
-    .catch((error) => {console.log("Error update document: ", error)})
-};
-
-
-export const add = (url, title, timestamp, cb) => {
-  const uid =  user.uid;
-  const collection = collectionKey(uid);
-
-  db.collection(collection).add({uid, url, title, timestamp})
-    .then((docRef) => {
-      console.log("Document written with ID: ", docRef.id);
-      cb(docRef);
-    })
-    .catch((error) => {console.log("Error adding document: ", error)})
-};
 
 export const put = (values) => {
 
-  console.log("values",values)
+  console.log("values",values);
 
   const uid =  user.uid;
-  const collection = `/log/${uid}/raw_2`;
+  const collection = collectionKey(uid);
   const data = Object.assign(values, {uid});
 
   return db.collection(collection).add(data)
@@ -62,6 +64,15 @@ export const uploadScreenShotUrl = (screenShotUrl) =>  {
 export const isLoggedIn = () => {
   return !!user;
 };
+
+export const loadLatest = () => {
+  const uid =  user.uid;
+  const collection = collectionKey(uid);
+
+  return db.collection(collection).orderBy("timestamp", "desc").limit(10)
+    .get().then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+};
+
 
 export const initFireBaseAuth = () => {
   firebase.initializeApp(config);

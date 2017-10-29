@@ -14,16 +14,20 @@ const getLastTab = (cb) => {
 
 
 
-const initAddListener = (movedNewPage, onRemove, onSetText) => {
+const initAddListener = (movedNewPage, onRemove, onSetText, loadForPopup) => {
   chrome.tabs.onActivated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
   chrome.tabs.onUpdated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
   chrome.tabs.onRemoved.addListener((id) => onRemove(id));
 
-  chrome.extension.onRequest.addListener((request) => {
+  chrome.extension.onRequest.addListener((request, sender, sendResponse) => {
     switch(request.message)
     {
       case 'setText':
         onSetText(request.text);
+        break;
+      case 'loadForPopup':
+        loadForPopup((data) => sendResponse(data));
+        break;
     }
   });
 };
@@ -34,9 +38,29 @@ const console = chrome.extension.getBackgroundPage().console;
 let db;
 let user;
 
+//const collectionKey = (uid) => `/log/${uid}/raw`;
+const collectionKey = (uid) => `/log/${uid}/raw_2`;
 
-
-
+//export const setDuration = (ref, lastActivatedTime) => {
+//  const timestamp = Date.now();
+//
+//  ref.update({"duration": timestamp - lastActivatedTime})
+//    .then(() => {console.log("Document update with ID: ")})
+//    .catch((error) => {console.log("Error update document: ", error)})
+//};
+//
+//
+//export const add = (url, title, timestamp, cb) => {
+//  const uid =  user.uid;
+//  const collection = collectionKey(uid);
+//
+//  db.collection(collection).add({uid, url, title, timestamp})
+//    .then((docRef) => {
+//      console.log("Document written with ID: ", docRef.id);
+//      cb(docRef);
+//    })
+//    .catch((error) => {console.log("Error adding document: ", error)})
+//};
 
 
 const put = (values) => {
@@ -44,7 +68,7 @@ const put = (values) => {
   console.log("values",values);
 
   const uid =  user.uid;
-  const collection = `/log/${uid}/raw_2`;
+  const collection = collectionKey(uid);
   const data = Object.assign(values, {uid});
 
   return db.collection(collection).add(data)
@@ -60,6 +84,15 @@ const put = (values) => {
 const isLoggedIn = () => {
   return !!user;
 };
+
+const loadLatest = () => {
+  const uid =  user.uid;
+  const collection = collectionKey(uid);
+
+  return db.collection(collection).orderBy("timestamp", "desc").limit(10)
+    .get().then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+};
+
 
 const initFireBaseAuth = () => {
   firebase.initializeApp(config);
@@ -222,11 +255,14 @@ const onSetText = (text) => {
 };
 
 
+const loadForPopup = (cb) => {
+  loadLatest().then(cb);
+};
 
 const initApp = () => {
   initFireBaseAuth();
   initIndexedDB();
-  initAddListener(movedNewPage, onRemove, onSetText);
+  initAddListener(movedNewPage, onRemove, onSetText, loadForPopup);
 
   setInterval(sendTest, 60 * 1000);
 };

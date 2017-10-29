@@ -9,6 +9,7 @@ import {
   //setDuration,
   //add,
   put,
+  loadLatest,
   uploadScreenShotUrl,
   initFireBaseAuth
 } from "./firebase"
@@ -80,11 +81,14 @@ const onSetText = (text) => {
 };
 
 
+const loadForPopup = (cb) => {
+  loadLatest().then(cb);
+};
 
 const initApp = () => {
   initFireBaseAuth();
   initIndexedDB();
-  initAddListener(movedNewPage, onRemove, onSetText);
+  initAddListener(movedNewPage, onRemove, onSetText, loadForPopup);
 
   setInterval(sendTest, 60 * 1000);
 };
