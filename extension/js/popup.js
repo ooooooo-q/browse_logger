@@ -45,7 +45,21 @@ function loaded(dataArray){
       const text_li = document.createElement('li');
       text_li.innerText = text;
       li.appendChild(text_li);
-    })
+    });
+
+    if (data.fileKey) {
+      var storage = firebase.storage();
+
+      console.log(data.fileKey);
+      storage.ref(data.fileKey).getDownloadURL().then((url) => {
+
+        console.log(url)
+
+        const img = document.createElement('img');
+        img.src = url;
+        li.appendChild(img);
+      }, (err) => {console.log(err)});
+    }
   });
 }
 

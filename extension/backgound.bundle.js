@@ -11,7 +11,7 @@ const getLastTab = (cb) => {
   });
 };
 
-
+const getScreenShotUrl = (cb) => {chrome.tabs.captureVisibleTab(cb);};
 
 
 const initAddListener = (movedNewPage, onRemove, onSetText, loadForPopup) => {
@@ -33,7 +33,7 @@ const initAddListener = (movedNewPage, onRemove, onSetText, loadForPopup) => {
 };
 
 
-const console = chrome.extension.getBackgroundPage().console;
+const console$1 = chrome.extension.getBackgroundPage().console;
 
 let db;
 let user;
@@ -65,7 +65,7 @@ const collectionKey = (uid) => `/log/${uid}/raw_2`;
 
 const put = (values) => {
 
-  console.log("values",values);
+  console$1.log("values",values);
 
   const uid =  user.uid;
   const collection = collectionKey(uid);
@@ -73,13 +73,30 @@ const put = (values) => {
 
   return db.collection(collection).add(data)
     .then((docRef) => {
-      console.log("Document written with ID: ", docRef.id);
+      console$1.log("Document written with ID: ", docRef.id);
     })
-    .catch((error) => {console.log("Error adding document: ", error);})
+    .catch((error) => {console$1.log("Error adding document: ", error);})
 };
 
 
+const uploadScreenShotUrl = (screenShotUrl) =>  {
+ const base64String = screenShotUrl.split("base64,")[1];
 
+  const uid =  user.uid;
+  const fileKey = `/capture/${uid}/${Date.now()}.png`;
+
+  const metadata = {
+    contentType: 'image/png',
+  };
+
+  const storageRef = firebase.storage().ref(fileKey);
+
+  return storageRef.putString(base64String, 'base64', metadata)
+    .then((snapshot) => {
+      console$1.log('Uploaded a base64 string!', snapshot);
+      return fileKey;
+    }, (e) => {console$1.log(e);});
+};
 
 const isLoggedIn = () => {
   return !!user;
@@ -100,7 +117,7 @@ const initFireBaseAuth = () => {
 
   firebase.auth().onAuthStateChanged((_user) => {
     user = _user;
-    console.log('User state change detected from the Background script of the Chrome Extension:', user);
+    console$1.log('User state change detected from the Background script of the Chrome Extension:', user);
   });
 };
 
@@ -112,7 +129,7 @@ const setData = (data) => {
   const transaction = db$1.transaction([tableName], "readwrite");
 
   transaction.oncomplete = (event) => {
-      console.log(event);
+      console$1.log(event);
   };
 
   transaction.objectStore(tableName).add(data);
@@ -131,7 +148,7 @@ const updateLastRecord = (values) => {
 
       const request = cursor.update(updateData);
       request.onsuccess = () => {
-        console.log("updated");
+        console$1.log("updated");
       };
     }
   };
@@ -151,7 +168,7 @@ const updateLastRecordSelectText = (text) => {
 
       const request = cursor.update(updateData);
       request.onsuccess = () => {
-        console.log("updated");
+        console$1.log("updated");
       };
     }
   };
@@ -177,7 +194,7 @@ const pluckAll = (pushPromise) => {
 
       cursor.continue();
     } else {
-      console.log("que end");
+      console$1.log("que end");
     }
   };
 
@@ -190,18 +207,18 @@ const initIndexedDB = () => {
   request.onsuccess = function(event) {
     db$1 = event.target.result;
 
-    console.log("indexed db init All done!");
+    console$1.log("indexed db init All done!");
   };
 
   request.onerror = function(event) {
     // エラー処理
-    console.log("indexed db init error", event);
+    console$1.log("indexed db init error", event);
   };
 
   request.onupgradeneeded = function(event) {
     db$1 = event.target.result;
 
-    console.log("indexed db upgrade start");
+    console$1.log("indexed db upgrade start");
 
     db$1.createObjectStore(tableName, { autoIncrement : true });
 
@@ -231,6 +248,9 @@ const movedNewPage = (tab) => {
   lastActiveUrl = url;
 
   setData({url, title, timestamp});
+
+  // 3分後に同じページであればキャプチャをとる
+  setTimeout(capture, 3 * 60 * 1000);
 };
 
 const onRemove = (id) => {
@@ -246,7 +266,54 @@ const onRemove = (id) => {
 };
 
 
-const sendTest = () => {
+const capture = () =>  {
+  if (!lastActiveUrl){ return; }
+
+  getLastTab((tab) => {
+    if (tab.url !== lastActiveUrl) { return; }
+
+    getScreenShotUrl((screenShotUrl) => {
+      resizeImage(screenShotUrl, (resizeUrl) => {
+        uploadScreenShotUrl(resizeUrl).then((fileKey) => {
+          updateLastRecord({fileKey});
+          console.log(fileKey);
+        });
+      });
+    });
+  });
+};
+
+
+// http://www.bokukoko.info/entry/2016/03/28/JavaScript_%E3%81%A7%E7%94%BB%E5%83%8F%E3%82%92%E3%83%AA%E3%82%B5%E3%82%A4%E3%82%BA%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95
+const resizeImage = (base64image, callback) => {
+  const MIN_SIZE = 256;
+
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+  const image = new Image();
+  image.crossOrigin = "Anonymous";
+
+  image.onload = function(event) {
+    var dstWidth, dstHeight;
+    if (this.width > this.height) {
+      dstWidth = MIN_SIZE;
+      dstHeight = this.height * MIN_SIZE / this.width;
+    } else {
+      dstHeight = MIN_SIZE;
+      dstWidth = this.width * MIN_SIZE / this.height;
+    }
+    canvas.width = dstWidth;
+    canvas.height = dstHeight;
+    ctx.drawImage(this, 0, 0, this.width, this.height, 0, 0, dstWidth, dstHeight);
+
+    callback(canvas.toDataURL());
+  };
+
+  image.src = base64image;
+};
+
+
+const sendToFireStore = () => {
   pluckAll((values) => put(values));
 };
 
@@ -264,7 +331,7 @@ const initApp = () => {
   initIndexedDB();
   initAddListener(movedNewPage, onRemove, onSetText, loadForPopup);
 
-  setInterval(sendTest, 60 * 1000);
+  setInterval(sendToFireStore, 60 * 1000);
 };
 
 

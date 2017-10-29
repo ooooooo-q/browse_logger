@@ -48,17 +48,21 @@ export const put = (values) => {
 
 export const uploadScreenShotUrl = (screenShotUrl) =>  {
  const base64String = screenShotUrl.split("base64,")[1];
-  const fileKey = `${Date.now()}.jpg`
+
+  const uid =  user.uid;
+  const fileKey = `/capture/${uid}/${Date.now()}.png`
 
   const metadata = {
-    contentType: 'image/jpeg',
+    contentType: 'image/png',
   };
 
-  var storageRef = firebase.storage().ref(fileKey);
+  const storageRef = firebase.storage().ref(fileKey);
 
-  storageRef.putString(base64String, 'base64', metadata)
-    .then((snapshot) => {console.log('Uploaded a base64 string!', snapshot)}
-      , (e) => {console.log(e);});
+  return storageRef.putString(base64String, 'base64', metadata)
+    .then((snapshot) => {
+      console.log('Uploaded a base64 string!', snapshot);
+      return fileKey;
+    }, (e) => {console.log(e);});
 };
 
 export const isLoggedIn = () => {
