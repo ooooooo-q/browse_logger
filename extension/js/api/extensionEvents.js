@@ -1,34 +1,32 @@
 
 
-export const getLastTab = (cb) => {
-  const queryOption = {'active': true, 'lastFocusedWindow': true};
+export const getLastTab = () => {
+  return new Promise((resolve, reject) => {
+    const queryOption = {'active': true, 'lastFocusedWindow': true};
 
-  chrome.tabs.query(queryOption, (tabs) => {
-    if (tabs.length > 0) {
-      cb(tabs[0])
-    }
-  });
+    chrome.tabs.query(queryOption, (tabs) => {
+      if (tabs.length > 0) {
+        resolve(tabs[0])
+      } else {
+        reject(new Error("tabs not found"))
+      }
+    });
+  })
 };
 
-export const getScreenShotUrl = (cb) => {chrome.tabs.captureVisibleTab(cb)};
+export const getScreenShotUrl = () => {
+  return new Promise((resolve, reject) => {
+    chrome.tabs.captureVisibleTab(resolve)
+  })
+};
 
 
-export const initAddListener = (movedNewPage, onRemove, onSetText, loadForPopup) => {
-  chrome.tabs.onActivated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
-  chrome.tabs.onUpdated.addListener(() => getLastTab((tab) => movedNewPage(tab)));
+export const initAddListener = (movedNewPage, onRemove, popupRequestHandling) => {
+  chrome.tabs.onActivated.addListener(() => getLastTab().then((tab)=> movedNewPage(tab)));
+  chrome.tabs.onUpdated.addListener(() => getLastTab().then((tab) => movedNewPage(tab)));
   chrome.tabs.onRemoved.addListener((id) => onRemove(id));
 
-  chrome.extension.onRequest.addListener((request, sender, sendResponse) => {
-    switch(request.message)
-    {
-      case 'setText':
-        onSetText(request.text);
-        break;
-      case 'loadForPopup':
-        loadForPopup((data) => sendResponse(data));
-        break;
-    }
-  });
+  chrome.extension.onRequest.addListener(popupRequestHandling);
 };
 
 
