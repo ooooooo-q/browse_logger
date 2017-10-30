@@ -75,7 +75,7 @@ const movedNewPage = (tab) => {
   setData({url, title, timestamp});
 
   // 3分後に同じページであればキャプチャをとる
-  setTimeout(() => capture(url), 0.5 * 60 * 1000);
+  setTimeout(() => capture(url), 3 * 60 * 1000);
 };
 
 const onRemove = (id) => {
