@@ -2,7 +2,7 @@ import {
   getLastTab,
   initAddListener,
   getScreenShotUrl
-} from "./extensionEvents"
+} from "./api/extensionEvents"
 
 import {
   isLoggedIn,
@@ -12,7 +12,7 @@ import {
   loadLatest,
   uploadScreenShotUrl,
   initFireBaseAuth
-} from "./firebase"
+} from "./api/firebase"
 
 import {
   setData,
@@ -20,7 +20,7 @@ import {
   updateLastRecord,
   updateLastRecordSelectText,
   pluckAll
-} from "./indexeddb";
+} from "./api/indexeddb";
 
 
 let lastActiveTabId = null;

@@ -8,27 +8,6 @@ let user;
 //const collectionKey = (uid) => `/log/${uid}/raw`;
 const collectionKey = (uid) => `/log/${uid}/raw_2`;
 
-//export const setDuration = (ref, lastActivatedTime) => {
-//  const timestamp = Date.now();
-//
-//  ref.update({"duration": timestamp - lastActivatedTime})
-//    .then(() => {console.log("Document update with ID: ")})
-//    .catch((error) => {console.log("Error update document: ", error)})
-//};
-//
-//
-//export const add = (url, title, timestamp, cb) => {
-//  const uid =  user.uid;
-//  const collection = collectionKey(uid);
-//
-//  db.collection(collection).add({uid, url, title, timestamp})
-//    .then((docRef) => {
-//      console.log("Document written with ID: ", docRef.id);
-//      cb(docRef);
-//    })
-//    .catch((error) => {console.log("Error adding document: ", error)})
-//};
-
 
 export const put = (values) => {
 
