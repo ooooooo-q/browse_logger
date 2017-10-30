@@ -152,30 +152,32 @@ const updateLastRecordSelectText = (text) => {
 };
 
 const pluckAll = (pushPromise) => {
-  const objectStore = db$1.transaction([tableName], "readwrite").objectStore(tableName);
+  return new Promise((resolve) => {
+    const objectStore = db$1.transaction([tableName], "readwrite").objectStore(tableName);
 
-  objectStore.openCursor().onsuccess = (event) => {
-    const cursor = event.target.result;
+    objectStore.openCursor().onsuccess = (event) => {
+      const cursor = event.target.result;
 
-    if (cursor){
-      const key = cursor.key;
-      const values = cursor.value;
+      if (cursor){
+        const key = cursor.key;
+        const values = cursor.value;
 
-      // 閲覧が終わっていないのであればsendしない。
-      if (values.duration && values.duration >= 0) {
-        pushPromise(cursor.value).then(() => {
-          const objectStore = db$1.transaction([tableName], "readwrite").objectStore(tableName);
-          objectStore.delete(key);
-        });
+        // 閲覧が終わっていないのであればsendしない。
+        if (values.duration && values.duration >= 0) {
+          pushPromise(cursor.value)
+            .then(() => {
+            const objectStore = db$1.transaction([tableName], "readwrite").objectStore(tableName);
+            objectStore.delete(key);
+          });
+        }
+
+        cursor.continue();
+      } else {
+        console$1.log("que end");
+        resolve();
       }
-
-      cursor.continue();
-    } else {
-      console$1.log("que end");
-    }
-  };
-
-
+    };
+  })
 };
 
 const initIndexedDB = () => {
@@ -347,13 +349,16 @@ const popupRequestHandling = (request, sender, sendResponse) => {
     case 'loadForPopup':
       loadLatest().then(sendResponse);
       break;
+    case 'forceLoad':
+      sendToFireStore().then(() =>loadLatest()).then(sendResponse);
+      break;
   }
 };
 
 // indexed db -> firestore
 
 const sendToFireStore = () => {
-  pluckAll((values) => put(values));
+  return pluckAll((values) => put(values))
 };
 
 

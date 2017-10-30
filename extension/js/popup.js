@@ -20,9 +20,15 @@ function authError(error){
   console.log(error);
 }
 
+function beforeLoad() {
+  const ul = document.querySelector('ul');
+  ul.innerText = "...";
+}
 
 function loaded(dataArray){
   const ul = document.querySelector('ul');
+
+  ul.innerText = "";
 
   dataArray.forEach((data) =>{
     console.log(data);
@@ -77,9 +83,18 @@ function initApp() {
   loginButton.addEventListener('click', () => {login(email.value, password.value)});
   registerButton.addEventListener('click', () => {register(email.value, password.value)});
 
+  beforeLoad();
   chrome.extension.sendRequest({'message':'loadForPopup'}, (response) =>{
     loaded(response);
   })
+
+  loadButton.addEventListener('click', () => {
+    beforeLoad();
+    chrome.extension.sendRequest({'message':'forceLoad'}, (response) => {
+      loaded(response);
+    });
+  });
+
 
 }
 

@@ -127,13 +127,16 @@ const popupRequestHandling = (request, sender, sendResponse) => {
     case 'loadForPopup':
       loadLatest().then(sendResponse);
       break;
+    case 'forceLoad':
+      sendToFireStore().then(() =>loadLatest()).then(sendResponse);
+      break;
   }
 };
 
 // indexed db -> firestore
 
 const sendToFireStore = () => {
-  pluckAll((values) => put(values))
+  return pluckAll((values) => put(values))
 };
 
 
