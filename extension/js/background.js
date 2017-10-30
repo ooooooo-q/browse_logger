@@ -38,7 +38,16 @@ const movedNewPage = (tab) => {
   const title = tab.title;
   const timestamp = Date.now();
 
-  updateLastRecord({duration: timestamp - lastActivatedTime});
+  if (isLastRecordLogging()){
+    updateLastRecord({duration: timestamp - lastActivatedTime});
+  }
+
+  if(isExcludeUrl(url)) {
+    lastActiveTabId = null;
+    lastActiveUrl = null;
+
+    return;
+  }
 
   lastActivatedTime = timestamp;
 
@@ -52,7 +61,7 @@ const movedNewPage = (tab) => {
 };
 
 const onRemove = (id) => {
-  if (id === lastActiveTabId) {
+  if (id === lastActiveTabId || isLastRecordLogging()) {
 
     const timestamp = Date.now();
 
@@ -63,10 +72,22 @@ const onRemove = (id) => {
   }
 };
 
+const isExcludeUrl = (_url) => {
+  const url = new URL(_url);
+
+  if (url.protocol === "http" || url.protocol === "https" ){
+    return true;
+  } else {
+    return false;
+  }
+};
+
+const isLastRecordLogging = () => !!lastActiveUrl;
+
 
 const capture = (url) =>  {
   getLastTab((tab) => {
-    if (tab.url !== url) { return; }
+    if (tab.url !== url || !isLastRecordLogging()) { return; }
 
     getScreenShotUrl((screenShotUrl) => {
       resizeImage(screenShotUrl, (resizeUrl) => {
@@ -100,6 +121,8 @@ const resizeImage = (base64image, callback) => {
     }
     canvas.width = dstWidth;
     canvas.height = dstHeight;
+
+    ctx.imageSmoothingEnabled = true;
     ctx.drawImage(this, 0, 0, this.width, this.height, 0, 0, dstWidth, dstHeight);
 
     callback(canvas.toDataURL());
@@ -114,7 +137,9 @@ const sendToFireStore = () => {
 };
 
 const onSetText = (text) => {
-  updateLastRecordSelectText(text);
+  if(isLastRecordLogging()) {
+    updateLastRecordSelectText(text);
+  }
 };
 
 
