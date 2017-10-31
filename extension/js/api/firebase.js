@@ -29,19 +29,16 @@ export const uploadScreenShotUrl = (screenShotUrl) =>  {
  const base64String = screenShotUrl.split("base64,")[1];
 
   const uid =  user.uid;
-  const fileKey = `/capture/${uid}/${Date.now()}.png`
+  const fileKey = `/capture/${uid}/${Date.now()}.png`;
 
   const metadata = {
-    contentType: 'image/png',
+    contentType: 'image/png'
   };
 
   const storageRef = firebase.storage().ref(fileKey);
 
   return storageRef.putString(base64String, 'base64', metadata)
-    .then((snapshot) => {
-      console.log('Uploaded a base64 string!', snapshot);
-      return fileKey;
-    }, (e) => {console.log(e);});
+    .then(() => fileKey);
 };
 
 export const isLoggedIn = () => {
@@ -53,7 +50,33 @@ export const loadLatest = () => {
   const collection = collectionKey(uid);
 
   return db.collection(collection).orderBy("timestamp", "desc").limit(10)
-    .get().then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+    .get().then((querySnapshot) => {
+      const promise = querySnapshot.docs.map((d) => {
+        const data = d.data();
+
+        if (data.fileKey) {
+          console.log(data.fileKey);
+
+          return firebase.storage().ref(data.fileKey)
+            .getDownloadURL()
+            .then((imgUrl) => Object.assign(data, {imgUrl}));
+        } else {
+          return data;
+        }
+      });
+
+      return Promise.all(promise)
+    });
+};
+
+
+
+export const register = (email, password) => {
+  return firebase.auth().createUserWithEmailAndPassword(email, password);
+};
+
+export const login = (email, password) => {
+  return firebase.auth().signInWithEmailAndPassword(email, password);
 };
 
 

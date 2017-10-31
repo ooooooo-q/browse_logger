@@ -9,7 +9,9 @@ import {
   put,
   loadLatest,
   uploadScreenShotUrl,
-  initFireBaseAuth
+  initFireBaseAuth,
+  register,
+  login
 } from "./api/firebase"
 
 import {
@@ -75,7 +77,7 @@ const movedNewPage = (tab) => {
   setData({url, title, timestamp});
 
   // 3分後に同じページであればキャプチャをとる
-  setTimeout(() => capture(url), 3 * 60 * 1000);
+  setTimeout(() => capture(url), 0.5 * 60 * 1000);
 };
 
 const onRemove = (id) => {
@@ -129,6 +131,17 @@ const popupRequestHandling = (request, sender, sendResponse) => {
       break;
     case 'forceLoad':
       sendToFireStore().then(() =>loadLatest()).then(sendResponse);
+      break;
+    case 'login':
+      login(request.email, request.password)
+        .then(()=> sendResponse({}), (e) => sendResponse({code: e.code, message: e.message}));
+      break;
+    case 'register':
+      register(request.email, request.password)
+        .then(() => sendResponse({}), (e) => sendResponse({code: e.code, message: e.message}));
+      break;
+    case 'isLoggedIn':
+      sendResponse(isLoggedIn());
       break;
   }
 };

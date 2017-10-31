@@ -63,16 +63,13 @@ const uploadScreenShotUrl = (screenShotUrl) =>  {
   const fileKey = `/capture/${uid}/${Date.now()}.png`;
 
   const metadata = {
-    contentType: 'image/png',
+    contentType: 'image/png'
   };
 
   const storageRef = firebase.storage().ref(fileKey);
 
   return storageRef.putString(base64String, 'base64', metadata)
-    .then((snapshot) => {
-      console$1.log('Uploaded a base64 string!', snapshot);
-      return fileKey;
-    }, (e) => {console$1.log(e);});
+    .then(() => fileKey);
 };
 
 const isLoggedIn = () => {
@@ -84,7 +81,33 @@ const loadLatest = () => {
   const collection = collectionKey(uid);
 
   return db.collection(collection).orderBy("timestamp", "desc").limit(10)
-    .get().then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+    .get().then((querySnapshot) => {
+      const promise = querySnapshot.docs.map((d) => {
+        const data = d.data();
+
+        if (data.fileKey) {
+          console$1.log(data.fileKey);
+
+          return firebase.storage().ref(data.fileKey)
+            .getDownloadURL()
+            .then((imgUrl) => Object.assign(data, {imgUrl}));
+        } else {
+          return data;
+        }
+      });
+
+      return Promise.all(promise)
+    });
+};
+
+
+
+const register = (email, password) => {
+  return firebase.auth().createUserWithEmailAndPassword(email, password);
+};
+
+const login = (email, password) => {
+  return firebase.auth().signInWithEmailAndPassword(email, password);
 };
 
 
@@ -297,7 +320,7 @@ const movedNewPage = (tab) => {
   setData({url, title, timestamp});
 
   // 3分後に同じページであればキャプチャをとる
-  setTimeout(() => capture(url), 3 * 60 * 1000);
+  setTimeout(() => capture(url), 0.5 * 60 * 1000);
 };
 
 const onRemove = (id) => {
@@ -351,6 +374,17 @@ const popupRequestHandling = (request, sender, sendResponse) => {
       break;
     case 'forceLoad':
       sendToFireStore().then(() =>loadLatest()).then(sendResponse);
+      break;
+    case 'login':
+      login(request.email, request.password)
+        .then(()=> sendResponse({}), (e) => sendResponse({code: e.code, message: e.message}));
+      break;
+    case 'register':
+      register(request.email, request.password)
+        .then(() => sendResponse({}), (e) => sendResponse({code: e.code, message: e.message}));
+      break;
+    case 'isLoggedIn':
+      sendResponse(isLoggedIn());
       break;
   }
 };

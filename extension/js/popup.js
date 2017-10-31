@@ -1,22 +1,15 @@
-
-function register(email, password){
-  firebase.auth().createUserWithEmailAndPassword(email, password).catch(authError);
-}
-
-function login(email, password){
-  firebase.auth().signInWithEmailAndPassword(email, password).catch(authError);
-}
-
 function authError(error){
-  // Handle Errors here.
-  var errorCode = error.code;
-  var errorMessage = error.message;
-  if (errorCode == 'auth/weak-password') {
-    alert('The password is too weak.');
+  let message;
+  if (error.code == 'auth/weak-password') {
+    message = 'The password is too weak.';
+  } else if (error.message) {
+    message = error.message;
   } else {
-    alert(errorMessage);
+    message = "success"
   }
 
+  const authStatus =  document.getElementById('auth_status');
+  authStatus.innerText = message;
   console.log(error);
 }
 
@@ -53,24 +46,16 @@ function loaded(dataArray){
       li.appendChild(text_li);
     });
 
-    if (data.fileKey) {
-      var storage = firebase.storage();
-
-      console.log(data.fileKey);
-      storage.ref(data.fileKey).getDownloadURL().then((url) => {
-
-        console.log(url)
-
-        const img = document.createElement('img');
-        img.src = url;
-        li.appendChild(img);
-      }, (err) => {console.log(err)});
+    if (data.imgUrl) {
+      const img = document.createElement('img');
+      img.src = data.imgUrl;
+      li.appendChild(img);
     }
   });
 }
 
+
 function initApp() {
-  firebase.initializeApp(config);
 
   const loginButton = document.getElementById('login');
   const registerButton = document.getElementById('register');
@@ -78,15 +63,30 @@ function initApp() {
 
   const email = document.querySelector('input[type="email"]');
   const password = document.querySelector('input[type="password"]');
-  const authStatus =  document.getElementById('auth_status');
 
-  loginButton.addEventListener('click', () => {login(email.value, password.value)});
-  registerButton.addEventListener('click', () => {register(email.value, password.value)});
+  loginButton.addEventListener('click', () => {
+    const request = {
+      message: 'login',
+      email: email.value,
+      password: password.value
+    };
+    chrome.extension.sendRequest(request, (error) =>{ authError(error) });
+  });
+
+  registerButton.addEventListener('click', () => {
+    const request = {
+      message: 'register',
+      email: email.value,
+      password: password.value
+    };
+    chrome.extension.sendRequest(request, (error) =>{ authError(error) });
+  });
+
 
   beforeLoad();
   chrome.extension.sendRequest({'message':'loadForPopup'}, (response) =>{
     loaded(response);
-  })
+  });
 
   loadButton.addEventListener('click', () => {
     beforeLoad();
@@ -94,8 +94,6 @@ function initApp() {
       loaded(response);
     });
   });
-
-
 }
 
 window.onload = function() {
