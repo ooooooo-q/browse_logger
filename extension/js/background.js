@@ -10,6 +10,7 @@ import {
   loadLatest,
   uploadScreenShotUrl,
   initFireBaseAuth,
+  downloadUrl,
   register,
   login
 } from "./api/firebase"
@@ -142,6 +143,11 @@ const popupRequestHandling = (request, sender, sendResponse) => {
       break;
     case 'isLoggedIn':
       sendResponse(isLoggedIn());
+      break;
+    case 'downloadUrl':
+      downloadUrl(request.fileKey).then(sendResponse);
+      break;
+    default:
       break;
   }
 };

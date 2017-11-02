@@ -46,10 +46,17 @@ function loaded(dataArray){
       li.appendChild(text_li);
     });
 
-    if (data.imgUrl) {
-      const img = document.createElement('img');
-      img.src = data.imgUrl;
-      li.appendChild(img);
+    if (data.fileKey) {
+      const request = {
+        message: 'downloadUrl',
+        fileKey: data.fileKey
+      };
+
+      chrome.extension.sendRequest(request, (url) =>{
+        const img = document.createElement('img');
+        img.src = url;
+        li.appendChild(img);
+      });
     }
   });
 }

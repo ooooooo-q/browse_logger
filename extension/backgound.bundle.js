@@ -80,24 +80,13 @@ const loadLatest = () => {
   const uid =  user.uid;
   const collection = collectionKey(uid);
 
-  return db.collection(collection).orderBy("timestamp", "desc").limit(10)
-    .get().then((querySnapshot) => {
-      const promise = querySnapshot.docs.map((d) => {
-        const data = d.data();
+  return db.collection(collection)
+    .orderBy("timestamp", "desc").limit(10).get()
+    .then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+};
 
-        if (data.fileKey) {
-          console$1.log(data.fileKey);
-
-          return firebase.storage().ref(data.fileKey)
-            .getDownloadURL()
-            .then((imgUrl) => Object.assign(data, {imgUrl}));
-        } else {
-          return data;
-        }
-      });
-
-      return Promise.all(promise)
-    });
+const downloadUrl = (fileKey) => {
+  return firebase.storage().ref(fileKey).getDownloadURL()
 };
 
 
@@ -385,6 +374,11 @@ const popupRequestHandling = (request, sender, sendResponse) => {
       break;
     case 'isLoggedIn':
       sendResponse(isLoggedIn());
+      break;
+    case 'downloadUrl':
+      downloadUrl(request.fileKey).then(sendResponse);
+      break;
+    default:
       break;
   }
 };

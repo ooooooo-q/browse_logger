@@ -49,24 +49,13 @@ export const loadLatest = () => {
   const uid =  user.uid;
   const collection = collectionKey(uid);
 
-  return db.collection(collection).orderBy("timestamp", "desc").limit(10)
-    .get().then((querySnapshot) => {
-      const promise = querySnapshot.docs.map((d) => {
-        const data = d.data();
+  return db.collection(collection)
+    .orderBy("timestamp", "desc").limit(10).get()
+    .then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+};
 
-        if (data.fileKey) {
-          console.log(data.fileKey);
-
-          return firebase.storage().ref(data.fileKey)
-            .getDownloadURL()
-            .then((imgUrl) => Object.assign(data, {imgUrl}));
-        } else {
-          return data;
-        }
-      });
-
-      return Promise.all(promise)
-    });
+export const downloadUrl = (fileKey) => {
+  return firebase.storage().ref(fileKey).getDownloadURL()
 };
 
 
