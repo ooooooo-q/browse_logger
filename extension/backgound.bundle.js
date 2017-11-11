@@ -263,16 +263,20 @@ let lastActiveTabId = null;
 let lastActiveUrl = null;
 let lastActivatedTime = null;
 
+let excludeDomains = [];
+
 // 状態判定
 
 const isExcludeUrl = (_url) => {
   const url = new URL(_url);
 
-  if (url.protocol === "http" || url.protocol === "https" ){
+  // http, https 以外は記録しない
+  if (!["http:", "https:"].includes(url.protocol)) {
     return true;
-  } else {
-    return false;
   }
+
+  // option pageで , 区切りで設定したドメインと完全一致していたら記録しない
+  return excludeDomains.some((domain) => domain === url.host);
 };
 
 const isLastRecordLogging = () => !!lastActiveUrl;
@@ -294,9 +298,10 @@ const movedNewPage = (tab) => {
   }
 
   if(isExcludeUrl(tab.url)) {
+    console.log("not loggged", tab.url);
+
     lastActiveTabId = null;
     lastActiveUrl = null;
-
     return;
   }
 
@@ -390,11 +395,23 @@ const sendToFireStore = () => {
 };
 
 
+// setting
+
+const initSettingLoad = () => {
+  const defaults = {
+    excludeDomains: ""
+  };
+
+  chrome.storage.local.get(defaults, (items) => {
+    excludeDomains = items.excludeDomains.split(",").map((s) => s.trim());
+  });
+};
 
 const initApp = () => {
   initFireBaseAuth();
   initIndexedDB();
   initAddListener(movedNewPage, onRemove, popupRequestHandling);
+  initSettingLoad();
 
   setInterval(sendToFireStore, 60 * 1000);
 };
