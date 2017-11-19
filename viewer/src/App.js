@@ -4,13 +4,14 @@ import './App.css';
 import { Admin, Resource } from 'admin-on-rest';
 
 import { PostList, PostEdit, PostCreate, PostIcon } from './js/posts';
-import apiClient from "./js/api_client";
+import restClient from "./js/rest_client";
+import authClient from "./js/auth_client";
 
 
 class App extends Component {
   render() {
     return (
-      <Admin restClient={apiClient('http://localhost:3000')}>
+      <Admin restClient={restClient()} authClient={authClient}>
         <Resource name="posts" list={PostList} edit={PostEdit} create={PostCreate} icon={PostIcon}/>
       </Admin>
     );
