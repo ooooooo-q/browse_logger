@@ -12,31 +12,30 @@ import {getDb, getUser, authCheck} from "./auth_client";
 
 const collectionKey = (uid) => `/log/${uid}/raw_2`;
 
+let cursor ;
+
 const getList = (resource, params) => {
   console.log(resource, params);
 
   const db = getDb();
   const user = getUser();
   const collection = collectionKey(user.uid);
-
   const page = params.pagination.page;
-  console.log(page, 50 * page);
 
-  const dataPromise =  db.collection(collection)
-    .orderBy("timestamp", "desc")
-    .limit(50)
-    .get()
-    .then((querySnapshot) => querySnapshot.docs.map((d) => d.data()));
+  let query = db.collection(collection).orderBy("timestamp", "desc").limit(10);
+  query = page > 1 && cursor ? query.startAt(cursor.data().timestamp) : query;
 
-  const lengthPromise = db.collection(collection).get().then((snapshot) => snapshot.docs.length);
+  return query.get()
+    .then((querySnapshot) => {
+      const docs = querySnapshot.docs;
+      cursor = docs[ docs.length - 1 ];
+      //console.log(cursor)
 
-  return Promise.all([dataPromise, lengthPromise])
-    .then((res) => {
-      const data = res[0].map((d, idx) => {
+      const data = querySnapshot.docs.map((d) => d.data()).map((d, idx) => {
         return {...d, id: idx, duration_sec: Math.ceil(d.duration / 1000)}
       }); // idがないと一つしか出ない
 
-      return {data, total: res[1]};
+      return {data, total: 100}; // totalは使えないのでダミー
     });
 };
 
