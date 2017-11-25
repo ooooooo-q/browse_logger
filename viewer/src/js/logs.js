@@ -1,10 +1,17 @@
 import React from 'react';
 import {
   List, Datagrid, Edit, Create, SimpleForm,
-  UrlField,
+  UrlField, Filter,
   DateField, TextField, DisabledInput,
-  TextInput, LongTextInput, DateInput
+  TextInput, LongTextInput, DateInput,
+  EditButton
 } from 'admin-on-rest';
+import {
+  Card,
+  CardActions,
+  CardHeader,
+  CardText,
+} from 'material-ui/Card';
 
 import FlatButton from 'material-ui/FlatButton';
 import ChevronLeft from 'material-ui/svg-icons/navigation/chevron-left';
@@ -18,27 +25,55 @@ export const LogIcon = _LogIcon;
 const LogPagination = ({ page, perPage, total, setPage }) => {
   return (
     <Toolbar>
-      <ToolbarGroup>
-        <FlatButton primary key="prev" label="Prev" icon={<ChevronLeft />} onClick={() => setPage(page - 1)} />
-        <FlatButton primary key="next" label="Next" icon={<ChevronRight />} onClick={() => setPage(page + 1)} labelPosition="before" />
-      </ToolbarGroup>
+      <div onMouseOver={() => setPage(page - 1)} >next .. ↓</div>
     </Toolbar>
   );
 };
 
+const LogFilter = (props) => (
+  <Filter {...props}>
+    <TextInput label="sec" source="durationSec" defaultValue={10} alwaysOn />
+  </Filter>
+);
+
+
+const cardStyle = {
+  width: 300,
+  minHeight: 300,
+  margin: '0.5em',
+  display: 'inline-block',
+  verticalAlign: 'top',
+  wordBreak: 'break-all',
+};
+const LogGrid = ({ ids, data, basePath }) => (
+  <div style={{ margin: '1em' }}>
+    {ids.map(id =>
+      <Card key={id} style={cardStyle}>
+        <CardHeader
+          title={<TextField record={data[id]} source="title" />}
+          subtitle={ <DateField record={data[id]} source="timestamp" options={{
+              month: 'numeric', day: 'numeric',
+              hour: 'numeric', minute: 'numeric',
+              hour12: false
+              }}/>}
+
+        />
+        <CardText>
+          <UrlField record={data[id]} source="url" />
+          <TextField record={data[id]} source="duration_sec" />
+        </CardText>
+      </Card>
+    )}
+  </div>
+);
+LogGrid.defaultProps = {
+  data: {},
+  ids: []
+};
 
 export const LogList = (props) => (
-  <List {...props}  pagination={<LogPagination />}>
-    <Datagrid>
-      <DateField source="timestamp" options={{
-        month: 'numeric', day: 'numeric',
-        hour: 'numeric', minute: 'numeric',
-        hour12: false
-      }}/>
-      <TextField source="title" />
-      <UrlField source="url" />
-      <TextField source="duration_sec" />
-    </Datagrid>
+  <List {...props}  pagination={<LogPagination />} filters={<LogFilter />}>
+    <LogGrid />
   </List>
 );
 
