@@ -11,11 +11,11 @@ import ChevronLeft from 'material-ui/svg-icons/navigation/chevron-left';
 import ChevronRight from 'material-ui/svg-icons/navigation/chevron-right';
 import { Toolbar, ToolbarGroup } from 'material-ui/Toolbar';
 
-import _PostIcon from 'material-ui/svg-icons/action/book';
-export const PostIcon = _PostIcon;
+import _LogIcon from 'material-ui/svg-icons/action/book';
+export const LogIcon = _LogIcon;
 
 
-const PostPagination = ({ page, perPage, total, setPage }) => {
+const LogPagination = ({ page, perPage, total, setPage }) => {
   return (
     <Toolbar>
       <ToolbarGroup>
@@ -27,8 +27,8 @@ const PostPagination = ({ page, perPage, total, setPage }) => {
 };
 
 
-export const PostList = (props) => (
-  <List {...props}  pagination={<PostPagination />}>
+export const LogList = (props) => (
+  <List {...props}  pagination={<LogPagination />}>
     <Datagrid>
       <DateField source="timestamp" options={{
         month: 'numeric', day: 'numeric',
@@ -42,12 +42,12 @@ export const PostList = (props) => (
   </List>
 );
 
-const PostTitle = ({ record }) => {
-  return <span>Post {record ? `"${record.title}"` : ''}</span>;
+const LogTitle = ({ record }) => {
+  return <span>Log {record ? `"${record.title}"` : ''}</span>;
 };
 
-export const PostEdit = (props) => (
-  <Edit title={<PostTitle />} {...props}>
+export const LogEdit = (props) => (
+  <Edit title={<LogTitle />} {...props}>
     <SimpleForm>
       <DisabledInput source="id" />
       <TextInput source="title" />
@@ -60,8 +60,8 @@ export const PostEdit = (props) => (
   </Edit>
 );
 
-export const PostCreate = (props) => (
-  <Create title="Create a Post" {...props}>
+export const LogCreate = (props) => (
+  <Create title="Create a Log" {...props}>
     <SimpleForm>
       <TextInput source="title" />
       <TextInput source="teaser" options={{ multiLine: true }} />
